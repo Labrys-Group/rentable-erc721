@@ -37,7 +37,7 @@ describe("Rentable", () => {
         await expect(contract.connect(deployer).setUser(0, bob.address, expiry)).to.be.revertedWith("Rentable: Only the owner can set a user")
     });
     
-    it("Should set a user", async () => {
+    it("Should set a user without changing owner", async () => {
         await contract.connect(alice).setUser(0, bob.address, expiry);
         const owner = await token.ownerOf(0);
         const user = await contract.userOf(0);
