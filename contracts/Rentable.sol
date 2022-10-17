@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.3; 
 
-//Can change this to point to specific contract?
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./interfaces/IERC_DualRoles.sol";
+import "./GameItem.sol";
 
-contract ERC_DualRoles is ERC721, IERC_DualRoles {
+contract Rentable is IERC_DualRoles {
+    GameItem public gameItem;
     struct UserInfo 
     {
         address user;   // address of user role
@@ -14,13 +14,14 @@ contract ERC_DualRoles is ERC721, IERC_DualRoles {
 
     mapping (uint256  => UserInfo) internal _users;
 
-    constructor(string memory name_, string memory symbol_)
-     ERC721(name_, symbol_)
-     {         
+    constructor(GameItem _gameItem)
+     {      
+        require(address(_gameItem) != address(0), "Cannot set game item to zero address");
+        gameItem = _gameItem;
      }
     
     function setUser(uint256 tokenId, address user, uint64 expires) public virtual override{
-        require(_isApprovedOrOwner(msg.sender, tokenId),"ERC721: transfer caller is not owner nor approved");
+       require(msg.sender == gameItem.ownerOf(tokenId), "Rentable: Only the owner can set a user");
         UserInfo storage info =  _users[tokenId];
         info.user = user;
         info.expires = expires;
@@ -43,24 +44,5 @@ contract ERC_DualRoles is ERC721, IERC_DualRoles {
         else{
             return address(0);
         }
-    }
-
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal virtual override{
-        super._beforeTokenTransfer(from, to, tokenId);
-
-        if (from != to) {
-            _users[tokenId].user = address(0);
-            _users[tokenId].expires = 0;
-            emit UpdateUser(tokenId,address(0),0);
-        }
-    }
-
-    // for test
-    function mint(uint256 tokenId, address to) public {
-        _mint(to, tokenId);
     }
 } 

@@ -1,13 +1,18 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
+import { ethers } from "hardhat";
+import { GameItem } from "../typechain-types/contracts/GameItem";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre;
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
-  const contract = await deploy("GameItem", {
+
+  const token = await ethers.getContract("GameItem") as GameItem;
+  
+  const contract = await deploy("Rentable", {
     from: deployer,
-    args: [],
+    args: [token.address],
     log: true,
   });
 
@@ -15,4 +20,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 };
 export default func;
-func.tags = ["testbed", "_GameItem"];
+func.tags = ["testbed", "_Rentable"];
