@@ -16,7 +16,6 @@ contract Rentable is IERC_DualRoles {
 
     constructor(GameItem _gameItem)
      {      
-        require(address(_gameItem) != address(0), "Cannot set game item to zero address");
         gameItem = _gameItem;
      }
     
