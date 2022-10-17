@@ -20,7 +20,7 @@ describe("Rentable", () => {
 		contract = await ethers.getContract("Rentable");
         await token.awardItem(alice.address, "https://game.example/item-id-8u5h2m.json");
         //Set expiry for midnight, Halloween, 2022
-        expiry = 1667138400
+        expiry = 1667138400;
 	});
 	
 	it("Should set owner", async () => {
@@ -49,5 +49,5 @@ describe("Rentable", () => {
         await contract.connect(alice).setUser(0, bob.address, expiry);
         const tokenExpires = await contract.userExpires(0);
         expect(tokenExpires).to.be.equal(expiry);
-    })
+    });
 });

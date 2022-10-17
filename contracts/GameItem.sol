@@ -21,4 +21,8 @@ contract GameItem is ERC721URIStorage {
         _tokenIds.increment();
         return newItemId;
     }
+
+    //transfer
+
+    //user permissions-- escrow
 }
