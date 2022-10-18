@@ -2,12 +2,14 @@
 pragma solidity 0.8.3; 
 
 import "./interfaces/IERC_DualRoles.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./GameItem.sol";
 import "./Token.sol";
+import "./Escrow.sol";
 
-contract Rentable is IERC_DualRoles {
+contract Rentable is IERC_DualRoles, Ownable {
     Token public token;
-    GameItem public gameItem;
+    Escrow public escrow;
 
     struct UserInfo 
     {
@@ -18,31 +20,22 @@ contract Rentable is IERC_DualRoles {
     //Map token ID to user info
     mapping (uint256  => UserInfo) internal _user;
 
-    constructor(Token _token, GameItem _gameItem)
+    constructor(Token _token)
      {      
         token = _token;
-        gameItem = _gameItem;
+     }
+
+     function setEscrow(Escrow _escrow) public onlyOwner {
+        escrow = _escrow;
      }
     
     function setUser(uint256 tokenId, address user, uint64 expires) public virtual override{
-        require(msg.sender == gameItem.ownerOf(tokenId), "Rentable: Only the owner can set a user");
+        require(msg.sender == address(escrow), "Rentable: You cannot set the user for this token");
         require(this.userOf(tokenId) == address(0), "Rentable: Token has already been rented out");
         UserInfo storage info =  _user[tokenId];
         info.user = user;
         info.expires = expires;
         emit UpdateUser(tokenId,user,expires);
-    }
-
-    //Transfers back to owner when expired
-    function transferToOwner(uint256 tokenId) public {
-        require(_user[tokenId].expires >= block.timestamp || msg.sender == _user[tokenId].user);
-        UserInfo storage info =  _user[tokenId];
-        info.user = address(0);
-    }
-
-    //Request to rent an item-- send to escrow contract
-    function requestRental(uint256 tokenId) public {
-
     }
 
     /**
