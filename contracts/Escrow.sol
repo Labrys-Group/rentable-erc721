@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.3;
 
-import "./Rentable.sol";
 import "./GameItem.sol";
 import "./Token.sol";
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Escrow {
-    Rentable public rentable;
+contract Escrow is Ownable{
     GameItem public gameItem;
     Token public token;
 
@@ -29,9 +28,8 @@ contract Escrow {
 
     event ProposalMade(address owner, address user, uint256 tokenId, uint256 proposalId);
 
-    constructor(Rentable _rentable, GameItem _gameItem, Token _token) {
-        require(address(_rentable) != address(0) && address(_gameItem) != address(0) && address(_token) != address(0), "Cannot set contract to zero address");
-        rentable = _rentable;
+    constructor(GameItem _gameItem, Token _token) {
+        require(address(_gameItem) != address(0) && address(_token) != address(0), "Cannot set contract to zero address");
         gameItem = _gameItem;
         token = _token;
     }
@@ -61,8 +59,23 @@ contract Escrow {
     function acceptProposal(uint256 proposalId, uint256 amount, uint64 expires) public {
         require(msg.sender == allProposals[proposalId].owner, "Escrow: You do not own this token");
         require(allProposals[proposalId].active == true, "Escrow: This proposal is not active");
+        require(gameItem.userOf(allProposals[proposalId].tokenId) == address(0), "Escrow: This item has already been rented");
         require(token.balanceOf(allProposals[proposalId].user) >= amount, "Escrow: The user does not have enough tokens to complete this transaction.");
         token.transferFrom(allProposals[proposalId].user, allProposals[proposalId].owner, amount);
-        rentable.setUser(allProposals[proposalId].tokenId, allProposals[proposalId].user, expires);
+        gameItem.setUser(allProposals[proposalId].tokenId, allProposals[proposalId].user, expires);
+    }
+
+    function storeItemInEscrow(uint256 tokenId) public {
+        if(gameItem.userOf(tokenId) != address(0)) {
+            require(msg.sender == gameItem.userOf(tokenId), "You cannot start a gaming session with this token");
+        } else {
+            require(msg.sender == gameItem.ownerOf(tokenId), "You cannot start a gaming session with this token");
+        }
+        gameItem.transferFrom(gameItem.ownerOf(tokenId), address(this), tokenId);
+    }
+
+    function loseItem(uint256 tokenId, address winner) public {
+        require(gameItem.ownerOf(tokenId) == address(this), "Cannot lose item that is not in escrow");
+        gameItem.transferFrom(address(this), winner, tokenId);
     }
 }

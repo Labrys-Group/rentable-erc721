@@ -9,13 +9,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const rentable = await ethers.getContract("Rentable") as Rentable;
   const gameItem = await ethers.getContract("GameItem") as GameItem;
   const token = await ethers.getContract("Token") as Token;
   
   const contract = await deploy("Escrow", {
     from: deployer,
-    args: [rentable.address, gameItem.address, token.address],
+    args: [gameItem.address, token.address],
     log: true,
   });
 
